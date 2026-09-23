@@ -1,9 +1,12 @@
 // Service Worker для Daily Tracker
-const CACHE_NAME = 'daily-tracker-v1';
+const CACHE_NAME = 'daily-tracker-v2';
+
 const URLS_TO_CACHE = [
   './',
   './tracker_busy.html',
-  './manifest-tracker.json'
+  './manifest-tracker.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

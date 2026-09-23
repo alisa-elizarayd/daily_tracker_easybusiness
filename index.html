@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Daily Tracker - Final + Done</title>
+    <title>Daily Tracker</title>
+<link rel="manifest" href="manifest-tracker.json">
+<meta name="theme-color" content="#d633ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tracker">
+<link rel="apple-touch-icon" href="icons/tracker-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/tracker-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/tracker-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/tracker-512.png">
+<style>
     <style>
         :root {
             --grid-color: #e0e0e0;
@@ -1172,6 +1183,16 @@
         if (!loadFromLocal()) {
             createWidget('square', { x: 100, y: 100, width: 260, height: 220 });
         }
+    </script>
+     <!-- PWA Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw-tracker.js')
+            .then((reg) => console.log('✅ SW зарегистрирован:', reg.scope))
+            .catch((err) => console.log('⚠️ SW ошибка:', err));
+        });
+      }
     </script>
 </body>
 </html>

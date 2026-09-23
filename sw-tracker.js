@@ -43,7 +43,7 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         if (event.request.mode === 'navigate') {
-          return caches.match('./index-3.html');
+          return caches.match('./tracker_busy.html');
         }
       })
   );

@@ -2,7 +2,7 @@
 const CACHE_NAME = 'daily-tracker-v1';
 const URLS_TO_CACHE = [
   './',
-  './index-3.html',
+  './index.html',
   './manifest-tracker.json'
 ];
 

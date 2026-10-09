@@ -148,7 +148,7 @@
             display: flex;
             flex-direction: column;
             user-select: none;
-            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.2s, border-color 0.3s, filter 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.2s, border-color 0.3s;
             z-index: 5;
             box-sizing: border-box;
             touch-action: none;
@@ -484,7 +484,29 @@
         function setupResize(el) { const resizer = el.querySelector('.resizer'); let isResizing = false, startX, startY, startWidth, startHeight; resizer.addEventListener('pointerdown', (e) => { isResizing = true; startX = e.clientX; startY = e.clientY; startWidth = el.offsetWidth; startHeight = el.offsetHeight; el.style.zIndex = ++highestZIndex; try { resizer.setPointerCapture(e.pointerId); } catch (err) {} e.preventDefault(); e.stopPropagation(); }); resizer.addEventListener('pointermove', (e) => { if (!isResizing) return; const dx = e.clientX - startX; const dy = e.clientY - startY; const workspaceRect = workspace.getBoundingClientRect(); const maxWidth = workspaceRect.width - el.offsetLeft + 20; const maxHeight = workspaceRect.height - el.offsetTop + 20; el.style.width = `${Math.max(160, Math.min(startWidth + dx, maxWidth))}px`; el.style.height = `${Math.max(140, Math.min(startHeight + dy, maxHeight))}px`; autoScaleText(el); }); resizer.addEventListener('pointerup', (e) => { if (!isResizing) return; isResizing = false; try { resizer.releasePointerCapture(e.pointerId); } catch (err) {} saveToLocal(); }); resizer.addEventListener('pointercancel', () => { isResizing = false; }); }
         function setupWidgetControls(el) { const content = el.querySelector('.widget-content'); const picker = el.querySelector('.color-picker'); el.querySelector('.controls').addEventListener('click', (e) => { const btn = e.target.closest('[data-action]'); if (!btn) return; e.preventDefault(); const action = btn.dataset.action; if (action === 'bold') document.execCommand('bold'); if (action === 'italic') document.execCommand('italic'); if (action === 'underline') document.execCommand('underline'); if (action === 'font-minus') changeFontSize(el, -2); if (action === 'font-plus') changeFontSize(el, 2); if (action === 'toggle-mode') toggleMode(el, btn); if (action === 'delete') el.remove(); saveToLocal(); }); const doneBtn = el.querySelector('.done-btn'); doneBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); el.classList.toggle('done'); saveToLocal(); }); el.querySelectorAll('.controls button').forEach(btn => btn.addEventListener('pointerdown', (e) => e.preventDefault())); doneBtn.addEventListener('pointerdown', (e) => e.preventDefault()); picker.addEventListener('input', (e) => { applyColor(el, e.target.value); saveToLocal(); }); }
         function changeFontSize(widget, change) { const content = widget.querySelector('.widget-content'); let multiplier = parseFloat(widget.dataset.userFontMultiplier) || 1; multiplier += change > 0 ? 0.15 : -0.15; multiplier = Math.max(0.4, Math.min(3, multiplier)); widget.dataset.userFontMultiplier = multiplier; const selection = window.getSelection(); if (selection.toString().length > 0) { document.execCommand('styleWithCSS', false, true); const currentSize = parseFloat(window.getComputedStyle(content).fontSize); const newSize = Math.max(8, Math.min(currentSize + change, 72)); document.execCommand('fontSize', false, '7'); content.querySelectorAll('font[size="7"]').forEach(node => { node.removeAttribute('size'); node.style.fontSize = `${newSize}px`; }); } else autoScaleText(widget); }
-        function applyColor(widget, color) { const mode = widget.dataset.mode || 'pastel'; const hex = color.replace('#', ''); const rgb = hex.length === 6 ? hex.match(/.{2}/g).map(part => parseInt(part, 16)).join(',') : '214,51,255'; widget.style.setProperty('--accent-color', color); widget.style.setProperty('--accent-rgb', rgb); if (mode === 'solid') { widget.style.backgroundColor = color; widget.style.color = '#fff'; widget.classList.add('solid-mode'); widget.classList.remove('transparent-mode'); } else { widget.style.backgroundColor = `${color}42`; widget.style.color = '#333'; widget.classList.remove('solid-mode'); widget.classList.add('transparent-mode'); } const picker = widget.querySelector('.color-picker'); if (picker) picker.value = color; }
+        function applyColor(widget, color) {
+            const mode = widget.dataset.mode || 'pastel';
+            const hex = color.replace('#', '');
+            const rgb = hex.length === 6 ? hex.match(/.{2}/g).map(part => parseInt(part, 16)) : [214, 51, 255];
+            const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+            const isLight = luminance > 0.58;
+            widget.style.setProperty('--accent-color', color);
+            widget.style.setProperty('--accent-rgb', rgb.join(','));
+            if (mode === 'solid') {
+                widget.style.backgroundColor = color;
+                widget.style.color = isLight ? '#111' : '#fff';
+                widget.classList.add('solid-mode');
+                widget.classList.toggle('dark-theme', !isLight);
+                widget.classList.remove('transparent-mode');
+            } else {
+                widget.style.backgroundColor = `${color}42`;
+                widget.style.color = '#333';
+                widget.classList.remove('solid-mode', 'dark-theme');
+                widget.classList.add('transparent-mode');
+            }
+            const picker = widget.querySelector('.color-picker');
+            if (picker) picker.value = color;
+        }
         function toggleMode(widget, button) { const mode = widget.dataset.mode === 'solid' ? 'pastel' : 'solid'; widget.dataset.mode = mode; button.textContent = mode.toUpperCase(); applyColor(widget, widget.querySelector('.color-picker').value); }
         function getBoardData() { return [...document.querySelectorAll('.widget')].map(widget => ({ type: widget.classList.contains('type-paperclip') ? 'paperclip' : 'square', x: parseFloat(widget.style.left), y: parseFloat(widget.style.top), width: widget.offsetWidth, height: widget.offsetHeight, html: widget.querySelector('.widget-content').innerHTML, color: widget.querySelector('.color-picker').value, mode: widget.dataset.mode, userFontMultiplier: parseFloat(widget.dataset.userFontMultiplier) || 1, done: widget.classList.contains('done') })); }
         function saveToLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(getBoardData())); }

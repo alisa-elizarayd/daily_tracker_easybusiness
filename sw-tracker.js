@@ -1,8 +1,7 @@
 // Service Worker for Daily Tracker
-const CACHE_NAME = 'daily-tracker-v5';
+const CACHE_NAME = 'daily-tracker-v6';
 
 const URLS_TO_CACHE = [
-  './tracker_busy.html',
   './index.html',
   './manifest-tracker.json',
   './sw-tracker.js',
@@ -44,7 +43,7 @@ self.addEventListener('fetch', (event) => {
       });
     }).catch(() => {
       if (event.request.mode === 'navigate') {
-        return caches.match('./tracker_busy.html');
+        return caches.match('./index.html');
       }
       return Response.error();
     })
